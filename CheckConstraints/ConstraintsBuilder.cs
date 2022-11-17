@@ -24,7 +24,7 @@ public abstract class CheckConstraint
            $"_" +
            $"{ConstraintTypeName}";
 
-    public string ConstraintTypeName
+    protected virtual string ConstraintTypeName
         => GetType()
             .Name
             .Replace("Check", "")
@@ -54,7 +54,7 @@ internal class EnumConstraint : CheckConstraint
         var sql = new StringBuilder();
 
         if (PropertyBuilder.Metadata.ClrType == typeof(string) && PropertyBuilder.Metadata.IsNullable)
-            sql.Append($"(\"{columnName}\" IS NULL OR ");
+            sql.Append($"\"{columnName}\" IS NULL OR ");
 
         sql.Append($"\"{columnName}\" IN (");
         sql.AppendJoin(", ", enumValues);
@@ -67,11 +67,13 @@ internal class EnumConstraint : CheckConstraint
 public class RegexConstraint : CheckConstraint
 {
     private readonly string _regex;
+    private readonly string? _name;
 
-    public RegexConstraint(PropertyBuilder propertyBuilder, string regex)
+    public RegexConstraint(PropertyBuilder propertyBuilder, string regex, string? name = null)
         : base(propertyBuilder)
     {
         _regex = regex;
+        _name = name;
     }
 
     public override void Configure(IConventionModelBuilder builder)
@@ -82,11 +84,24 @@ public class RegexConstraint : CheckConstraint
         var sqlBuilder = new StringBuilder();
 
         if (PropertyBuilder.Metadata.ClrType == typeof(string) && PropertyBuilder.Metadata.IsNullable)
-            sqlBuilder.Append($"(\"{columnName}\" IS NULL OR ");
+            sqlBuilder.Append($"\"{columnName}\" IS NULL OR ");
 
         sqlBuilder.Append($"\"{columnName}\" ~ '{_regex}'");
 
         entityTypeBuilder.HasCheckConstraint(GetCheckConstraintName(), sqlBuilder.ToString());
+    }
+
+    protected override string ConstraintTypeName
+    {
+        get
+        {
+            var postFix = "";
+            if (string.IsNullOrWhiteSpace(_name))
+            {
+                postFix = "_" + _name;
+            }
+            return base.ConstraintTypeName + postFix;
+        }
     }
 }
 
@@ -110,7 +125,7 @@ public class LengthConstraint : CheckConstraint
         var sqlBuilder = new StringBuilder();
 
         if (PropertyBuilder.Metadata.ClrType == typeof(string) && PropertyBuilder.Metadata.IsNullable)
-            sqlBuilder.Append($"(\"{columnName}\" IS NULL OR ");
+            sqlBuilder.Append($"\"{columnName}\" IS NULL OR ");
 
         sqlBuilder.Append($"LENGTH(\"{columnName}\") <= {_maxLength}");
         if (_minLength.HasValue)
@@ -214,7 +229,7 @@ public static class ConstraintsBuilder
 
     private static void InternalHasEmailConstraint(this PropertyBuilder propertyBuilder)
     {
-        var constraint = new RegexConstraint(propertyBuilder, EmailRegex);
+        var constraint = new RegexConstraint(propertyBuilder, EmailRegex, "Email");
         AddConstraint(propertyBuilder, constraint);
     }
 
