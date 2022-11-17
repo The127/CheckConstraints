@@ -3,7 +3,7 @@ using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace CheckConstraints;
+namespace Darkarotte.CheckConstraints;
 
 public abstract class CheckConstraint
 {

@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using Microsoft.EntityFrameworkCore.Metadata.Conventions.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace CheckConstraints;
+namespace Darkarotte.CheckConstraints;
 
 public static class CheckConstraintExtensions
 {
